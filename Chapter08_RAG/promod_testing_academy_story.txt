@@ -1,0 +1,25 @@
+The Story of Promod Dutta and The Testing Academy
+
+Chapter 1: The Beginning
+
+Promod Dutta started his career as a software tester in the early 2000s. He was passionate about quality assurance and believed that testing was not just about finding bugs — it was about ensuring confidence in software delivery. After working in various companies across India, he noticed a massive gap in the industry: there were very few quality resources available for people who wanted to learn software testing from scratch. Most training programs focused heavily on development, and testing was treated as an afterthought.
+
+Chapter 2: The Vision
+
+In 2015, Promod decided to take matters into his own hands. He envisioned a platform that would empower aspiring QA engineers with practical, hands-on knowledge. He wanted to create a learning ecosystem where testing was celebrated, not sidelined. Thus, "The Testing Academy" was born. The academy started as a small YouTube channel where Promod uploaded free tutorials on Selenium WebDriver, Java for testers, and manual testing fundamentals. His teaching style was unique — simple, relatable, and deeply practical. He never assumed prior knowledge and always started from zero.
+
+Chapter 3: Growth and Community
+
+Within the first year, The Testing Academy YouTube channel crossed 50,000 subscribers. The community of testers grew rapidly across India, the Middle East, and Southeast Asia. Promod began conducting live webinars, answering hundreds of questions from learners every week. He introduced structured learning paths covering Manual Testing, Automation Testing with Selenium, API Testing with Postman and Rest Assured, Performance Testing with JMeter, and Mobile Testing with Appium. Each course was designed with real-world projects so that learners could build portfolios while studying.
+
+Chapter 4: AI and the Future of Testing
+
+By 2023, the landscape of software testing was undergoing a seismic shift. Artificial Intelligence was changing how testers worked. Promod was quick to recognize this transformation. He began creating content around AI-powered testing tools, prompt engineering for QA, and the use of large language models like ChatGPT and Claude for generating test cases, writing test plans, and automating routine QA tasks. He introduced a new course series called "AI Tester Blueprint" — a comprehensive program designed to help QA professionals transition into the age of AI-driven testing. The blueprint covered topics such as RAG pipelines for QA documentation, vector databases for test case retrieval, LLM-based test generation, and intelligent defect triage using AI agents.
+
+Chapter 5: The Philosophy
+
+Promod always believed in three core principles. First, "Testing is a mindset, not just a job title." He emphasized that everyone in a software team should think like a tester. Second, "Learn by doing." Every course at The Testing Academy included hands-on labs, real projects, and practical exercises. Third, "Stay curious, stay updated." The testing landscape evolves rapidly, and Promod encouraged his community to never stop learning. He often said, "The day you stop learning is the day you become obsolete in tech."
+
+Chapter 6: Impact and Legacy
+
+As of 2026, The Testing Academy has trained over 500,000 QA professionals worldwide. The YouTube channel has surpassed 300,000 subscribers with over 2,000 tutorials. Promod has authored multiple e-books on testing, spoken at international conferences, and mentored thousands of testers personally. His LinkedIn posts about testing careers, AI in QA, and career advice regularly reach hundreds of thousands of professionals. The Testing Academy has become more than a learning platform — it is a global movement that has redefined how people perceive and practice software testing. Promod's journey from a humble tester to a global QA educator is an inspiration to every aspiring quality assurance professional.

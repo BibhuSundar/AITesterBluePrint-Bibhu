@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Execution Report - VWO Login</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: auto; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 30px; }
+        .summary { display: flex; justify-content: space-around; margin-bottom: 30px; padding: 20px; background-color: #ecf0f1; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .summary div { font-size: 20px; font-weight: bold; color: #34495e; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { border: 1px solid #bdc3c7; padding: 14px; text-align: left; vertical-align: middle; }
+        th { background-color: #2c3e50; color: white; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        .status-passed { color: #27ae60; font-weight: bold; text-align: center; font-size: 16px; }
+        .status-failed { color: #e74c3c; font-weight: bold; text-align: center; font-size: 16px; }
+        .screenshot { max-width: 200px; border: 2px solid #ddd; border-radius: 4px; display: block; margin-top: 5px; transition: transform .2s; }
+        .screenshot:hover { transform: scale(1.05); border-color: #3498db; }
+        .evidence-col { text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>App.vwo.com Login - Test Execution Report</h1>
+
+        <div class="summary">
+            <div>Total Executed: <span style="color: #3498db;">20</span></div>
+            <div>Passed: <span style="color: #27ae60;">17</span></div>
+            <div>Failed: <span style="color: #e74c3c;">3</span></div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th width="10%">Test Case ID</th>
+                    <th width="20%">Test Case Title</th>
+                    <th width="5%">Priority</th>
+                    <th width="20%">Expected Result</th>
+                    <th width="20%">Actual Result</th>
+                    <th width="10%">Status</th>
+                    <th width="15%">Evidence</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><strong>TC_LOGIN_001</strong></td>
+                    <td>Verify valid login credentials</td>
+                    <td>P1</td>
+                    <td>User is logged in and redirected to Dashboard</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_002</strong></td>
+                    <td>Verify invalid username and password</td>
+                    <td>P1</td>
+                    <td>Login fails, error message thrown, stays on login page</td>
+                    <td>System showed incorrect or generic error instead of validating specifically. Screenshot attached.</td>
+                    <td class="status-failed">FAILED</td>
+                    <td class="evidence-col"><a href="../inputs/login_error.png" target="_blank"><img src="../inputs/login_error.png" class="screenshot" alt="Error Screenshot"></a></td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_003</strong></td>
+                    <td>Verify valid username with invalid password</td>
+                    <td>P1</td>
+                    <td>Login fails, error message 'Invalid credentials' thrown</td>
+                    <td>System showed incorrect or generic error instead of validating specifically. Screenshot attached.</td>
+                    <td class="status-failed">FAILED</td>
+                    <td class="evidence-col"><a href="../inputs/login_error.png" target="_blank"><img src="../inputs/login_error.png" class="screenshot" alt="Error Screenshot"></a></td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_004</strong></td>
+                    <td>Verify invalid username format</td>
+                    <td>P2</td>
+                    <td>Validation error 'Invalid email format' displayed</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_005</strong></td>
+                    <td>Verify blank username</td>
+                    <td>P2</td>
+                    <td>Validation error 'Username is required' displayed</td>
+                    <td>System showed incorrect or generic error instead of validating specifically. Screenshot attached.</td>
+                    <td class="status-failed">FAILED</td>
+                    <td class="evidence-col"><a href="../inputs/login_error.png" target="_blank"><img src="../inputs/login_error.png" class="screenshot" alt="Error Screenshot"></a></td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_006</strong></td>
+                    <td>Verify blank password</td>
+                    <td>P2</td>
+                    <td>Validation error 'Password is required' displayed</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_007</strong></td>
+                    <td>Verify blank username and password</td>
+                    <td>P2</td>
+                    <td>Validation errors for both fields displayed</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_008</strong></td>
+                    <td>Verify valid username with leading/trailing spaces</td>
+                    <td>P3</td>
+                    <td>Login succeeds, spaces are trimmed</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_009</strong></td>
+                    <td>Verify password with leading/trailing spaces</td>
+                    <td>P2</td>
+                    <td>Login fails unless password actually contains spaces</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_010</strong></td>
+                    <td>Verify SQL Injection in username</td>
+                    <td>P1</td>
+                    <td>Login fails, system behaves securely, error thrown</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_011</strong></td>
+                    <td>Verify SQL Injection in password</td>
+                    <td>P1</td>
+                    <td>Login fails, system behaves securely</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_012</strong></td>
+                    <td>Verify XSS payload in username</td>
+                    <td>P1</td>
+                    <td>Login fails, input is sanitized properly</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_013</strong></td>
+                    <td>Verify excessively long username length limits</td>
+                    <td>P3</td>
+                    <td>Login fails gracefully, length validation message thrown</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_014</strong></td>
+                    <td>Verify excessively long password length limits</td>
+                    <td>P3</td>
+                    <td>Login fails gracefully, length validation message thrown</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_015</strong></td>
+                    <td>Verify login with 2FA enabled account</td>
+                    <td>P1</td>
+                    <td>User redirected to 2FA verification screen</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_016</strong></td>
+                    <td>Verify account lockout after multiple failed attempts</td>
+                    <td>P1</td>
+                    <td>Account is temporarily locked, lockout error message thrown</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_017</strong></td>
+                    <td>Verify SSO authentication valid flow</td>
+                    <td>P1</td>
+                    <td>User redirected securely back to Dashboard</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_018</strong></td>
+                    <td>Verify SSO authentication with disabled account</td>
+                    <td>P2</td>
+                    <td>Login fails, exact error indicating account is inactive</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_019</strong></td>
+                    <td>Verify case insensitivity on valid username</td>
+                    <td>P3</td>
+                    <td>Login succeeds, email treats cases equally</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+                <tr>
+                    <td><strong>TC_LOGIN_020</strong></td>
+                    <td>Verify case sensitivity on valid password</td>
+                    <td>P2</td>
+                    <td>Login fails, passwords must be strictly case-sensitive</td>
+                    <td>System behaved securely as expected.</td>
+                    <td class="status-passed">PASSED</td>
+                    <td class="evidence-col">No Attachment</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RAG Chunking & Embedding Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a0e1a;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  /* Animated background blobs */
+  .bg-blob {
+    position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.12; pointer-events: none; z-index: 0;
+    animation: blobFloat 12s ease-in-out infinite alternate;
+  }
+  .bg-blob.a { width: 500px; height: 500px; background: #06b6d4; top: -100px; left: -80px; }
+  .bg-blob.b { width: 400px; height: 400px; background: #d946ef; bottom: -50px; right: -50px; animation-delay: 3s; }
+  .bg-blob.c { width: 350px; height: 350px; background: #8b5cf6; top: 40%; left: 50%; animation-delay: 6s; }
+  @keyframes blobFloat {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -40px) scale(1.08); }
+    100% { transform: translate(-20px, 20px) scale(0.95); }
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; position: relative; z-index: 1; }
+
+  /* Header */
+  .hero { text-align: center; margin-bottom: 50px; }
+  .hero h1 {
+    font-size: 2.8rem; font-weight: 800;
+    background: linear-gradient(135deg, #06b6d4, #d946ef, #8b5cf6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+  .hero p { color: #94a3b8; font-size: 1.1rem; font-weight: 300; }
+
+  /* Stats bar */
+  .stats {
+    display: flex; justify-content: center; gap: 30px; margin-bottom: 40px; flex-wrap: wrap;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 18px 28px; text-align: center;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s, border-color 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-3px); border-color: rgba(6,182,212,0.4); }
+  .stat-card .num { font-size: 2rem; font-weight: 700; color: #06b6d4; }
+  .stat-card .label { font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
+
+  /* Section titles */
+  .section-title {
+    font-size: 1.4rem; font-weight: 700; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title .icon { font-size: 1.3rem; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .tab {
+    padding: 10px 22px; border-radius: 12px; cursor: pointer; font-weight: 500; font-size: 0.85rem;
+    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);
+    color: #94a3b8; transition: all 0.25s;
+  }
+  .tab:hover { border-color: rgba(217,70,239,0.5); color: #e2e8f0; }
+  .tab.active { background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: white; border-color: transparent; }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Chunk cards */
+  .chunk-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 24px; margin-bottom: 20px;
+    backdrop-filter: blur(14px);
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .chunk-card:hover {
+    border-color: rgba(6,182,212,0.35);
+    box-shadow: 0 0 30px rgba(6,182,212,0.06);
+  }
+  .chunk-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+  .chunk-id {
+    font-weight: 700; font-size: 0.9rem;
+    background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .chunk-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    font-size: 0.7rem; padding: 4px 12px; border-radius: 20px; font-weight: 600;
+  }
+  .badge-chars { background: rgba(6,182,212,0.15); color: #06b6d4; border: 1px solid rgba(6,182,212,0.25); }
+  .badge-words { background: rgba(217,70,239,0.15); color: #d946ef; border: 1px solid rgba(217,70,239,0.25); }
+  .badge-dim { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.25); }
+  
+  .chunk-text {
+    font-size: 0.88rem; line-height: 1.75; color: #cbd5e1;
+    background: rgba(0,0,0,0.25); padding: 16px; border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.04); margin-bottom: 14px;
+    white-space: pre-wrap;
+  }
+  .embed-preview {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.72rem;
+    color: #64748b; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;
+    overflow-x: auto; border: 1px solid rgba(255,255,255,0.04);
+  }
+  .embed-preview .val { color: #06b6d4; }
+
+  /* Similarity matrix */
+  .matrix-container { overflow-x: auto; }
+  table.sim-matrix {
+    border-collapse: collapse; font-size: 0.75rem; width: 100%;
+  }
+  table.sim-matrix th, table.sim-matrix td {
+    padding: 10px 8px; text-align: center; border: 1px solid rgba(255,255,255,0.06);
+    min-width: 60px;
+  }
+  table.sim-matrix th {
+    background: rgba(6,182,212,0.1); color: #06b6d4; font-weight: 700; font-size: 0.7rem;
+  }
+
+  /* Original doc */
+  .original-doc {
+    background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06);
+    padding: 24px; border-radius: 16px; font-size: 0.9rem; line-height: 1.85; color: #94a3b8;
+    white-space: pre-wrap; max-height: 500px; overflow-y: auto;
+  }
+
+  /* Footer */
+  .footer { text-align: center; margin-top: 60px; color: #475569; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="bg-blob a"></div>
+<div class="bg-blob b"></div>
+<div class="bg-blob c"></div>
+
+<div class="container">
+  <div class="hero">
+    <h1>RAG Chunking & Embedding Visualizer</h1>
+    <p>Powered by Nomic-Embed-Text via Ollama &bull; Chapter 08 — The Testing Academy AI Blueprint</p>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showPanel('chunks')">📄 Chunks</div>
+    <div class="tab" onclick="showPanel('embeddings')">🧬 Embedding Details</div>
+    <div class="tab" onclick="showPanel('similarity')">🔗 Similarity Matrix</div>
+    <div class="tab" onclick="showPanel('original')">📖 Original Document</div>
+  </div>
+
+  <div class="panel active" id="panel-chunks"></div>
+  <div class="panel" id="panel-embeddings"></div>
+  <div class="panel" id="panel-similarity"></div>
+  <div class="panel" id="panel-original">
+    <h3 class="section-title"><span class="icon">📖</span> Original Document</h3>
+    <div class="original-doc">The Story of Promod Dutta and The Testing Academy
+
+Chapter 1: The Beginning
+
+Promod Dutta started his career as a software tester in the early 2000s. He was passionate about quality assurance and believed that testing was not just about finding bugs — it was about ensuring confidence in software delivery. After working in various companies across India, he noticed a massive gap in the industry: there were very few quality resources available for people who wanted to learn software testing from scratch. Most training programs focused heavily on development, and testing was treated as an afterthought.
+
+Chapter 2: The Vision
+
+In 2015, Promod decided to take matters into his own hands. He envisioned a platform that would empower aspiring QA engineers with practical, hands-on knowledge. He wanted to create a learning ecosystem where testing was celebrated, not sidelined. Thus, "The Testing Academy" was born. The academy started as a small YouTube channel where Promod uploaded free tutorials on Selenium WebDriver, Java for testers, and manual testing fundamentals. His teaching style was unique — simple, relatable, and deeply practical. He never assumed prior knowledge and always started from zero.
+
+Chapter 3: Growth and Community
+
+Within the first year, The Testing Academy YouTube channel crossed 50,000 subscribers. The community of testers grew rapidly across India, the Middle East, and Southeast Asia. Promod began conducting live webinars, answering hundreds of questions from learners every week. He introduced structured learning paths covering Manual Testing, Automation Testing with Selenium, API Testing with Postman and Rest Assured, Performance Testing with JMeter, and Mobile Testing with Appium. Each course was designed with real-world projects so that learners could build portfolios while studying.
+
+Chapter 4: AI and the Future of Testing
+
+By 2023, the landscape of software testing was undergoing a seismic shift. Artificial Intelligence was changing how testers worked. Promod was quick to recognize this transformation. He began creating content around AI-powered testing tools, prompt engineering for QA, and the use of large language models like ChatGPT and Claude for generating test cases, writing test plans, and automating routine QA tasks. He introduced a new course series called "AI Tester Blueprint" — a comprehensive program designed to help QA professionals transition into the age of AI-driven testing. The blueprint covered topics such as RAG pipelines for QA documentation, vector databases for test case retrieval, LLM-based test generation, and intelligent defect triage using AI agents.
+
+Chapter 5: The Philosophy
+
+Promod always believed in three core principles. First, "Testing is a mindset, not just a job title." He emphasized that everyone in a software team should think like a tester. Second, "Learn by doing." Every course at The Testing Academy included hands-on labs, real projects, and practical exercises. Third, "Stay curious, stay updated." The testing landscape evolves rapidly, and Promod encouraged his community to never stop learning. He often said, "The day you stop learning is the day you become obsolete in tech."
+
+Chapter 6: Impact and Legacy
+
+As of 2026, The Testing Academy has trained over 500,000 QA professionals worldwide. The YouTube channel has surpassed 300,000 subscribers with over 2,000 tutorials. Promod has authored multiple e-books on testing, spoken at international conferences, and mentored thousands of testers personally. His LinkedIn posts about testing careers, AI in QA, and career advice regularly reach hundreds of thousands of professionals. The Testing Academy has become more than a learning platform — it is a global movement that has redefined how people perceive and practice software testing. Promod's journey from a humble tester to a global QA educator is an inspiration to every aspiring quality assurance professional.
+</div>
+  </div>
+
+  <div class="footer">
+    Built with ❤️ by The Testing Academy &bull; Simple RAG Demo &bull; 2026
+  </div>
+</div>
+
+<script>
+const chunks = [
+  {
+    "id": "chunk_001",
+    "text": "The Story of Promod Dutta and The Testing Academy\n\nChapter 1: The Beginning\n\nPromod Dutta started his career as a software tester in the early 2000s. He was passionate about quality assurance and believed that testing was not just about finding bugs \u2014 it was about ensuring confidence in software delivery.",
+    "start_char": 0,
+    "end_char": 306,
+    "char_count": 306,
+    "word_count": 51,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      0.3243080973625183,
+      0.6000332236289978,
+      -3.8069093227386475,
+      0.09093548357486725,
+      1.258315086364746,
+      0.1498042494058609,
+      0.7827427387237549,
+      -0.6737991571426392,
+      0.037772178649902344,
+      -0.5356560349464417,
+      -0.6347776651382446,
+      0.5878047347068787,
+      0.8375795483589172,
+      1.0623983144760132,
+      -0.468741774559021,
+      -0.8773066401481628,
+      0.3530760109424591,
+      -1.436909556388855,
+      -0.8033925890922546,
+      0.13800834119319916
+    ],
+    "magnitude": 19.2747
+  },
+  {
+    "id": "chunk_002",
+    "text": "ere were very few quality resources available for people who wanted to learn software testing from scratch. Most training programs focused heavily on development, and testing was treated as an afterthought.\n\nChapter 2: The Vision\n\nIn 2015, Promod decided to take matters into his own hands. He envisioned a platform that would empower aspiring QA engineers with practical, hands-on knowledge. He wanted to create a learning ecosystem where testing was celebrated, not sidelined.",
+    "start_char": 400,
+    "end_char": 878,
+    "char_count": 478,
+    "word_count": 73,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      -0.33899903297424316,
+      0.5440131425857544,
+      -3.2300875186920166,
+      -0.422779381275177,
+      1.0367180109024048,
+      0.8197593092918396,
+      0.9675467610359192,
+      -0.5385300517082214,
+      0.6766273379325867,
+      -1.39578378200531,
+      -0.1741553097963333,
+      0.6069533228874207,
+      1.3750759363174438,
+      0.7197239398956299,
+      0.04590635374188423,
+      -0.26440340280532837,
+      1.3396708965301514,
+      -1.0872706174850464,
+      -1.016692042350769,
+      0.18249768018722534
+    ],
+    "magnitude": 18.3245
+  },
+  {
+    "id": "chunk_003",
+    "text": "ed to create a learning ecosystem where testing was celebrated, not sidelined. Thus, \"The Testing Academy\" was born. The academy started as a small YouTube channel where Promod uploaded free tutorials on Selenium WebDriver, Java for testers, and manual testing fundamentals. His teaching style was unique \u2014 simple, relatable, and deeply practical.",
+    "start_char": 800,
+    "end_char": 1147,
+    "char_count": 347,
+    "word_count": 52,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      0.03498849645256996,
+      1.138928771018982,
+      -3.4035940170288086,
+      -0.21796868741512299,
+      1.4921340942382812,
+      0.4297230839729309,
+      1.2940900325775146,
+      -0.288348913192749,
+      0.6777557134628296,
+      -1.0689843893051147,
+      -0.0003504736814647913,
+      0.7625125050544739,
+      2.0034596920013428,
+      1.114801049232483,
+      -0.3651758134365082,
+      -1.2186954021453857,
+      0.41926464438438416,
+      -1.016014575958252,
+      -1.1646451950073242,
+      0.505807638168335
+    ],
+    "magnitude": 18.5707
+  },
+  {
+    "id": "chunk_004",
+    "text": "from zero.\n\nChapter 3: Growth and Community\n\nWithin the first year, The Testing Academy YouTube channel crossed 50,000 subscribers. The community of testers grew rapidly across India, the Middle East, and Southeast Asia. Promod began conducting live webinars, answering hundreds of questions from learners every week.",
+    "start_char": 1200,
+    "end_char": 1517,
+    "char_count": 317,
+    "word_count": 46,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      -0.3213740885257721,
+      0.9909375905990601,
+      -3.74971342086792,
+      -0.3080647885799408,
+      0.8968656659126282,
+      0.11750978976488113,
+      0.7624059319496155,
+      0.12239927798509598,
+      0.28796571493148804,
+      -1.2214540243148804,
+      -1.2858625650405884,
+      0.7759255170822144,
+      1.10434889793396,
+      1.3429341316223145,
+      -0.037632279098033905,
+      -1.6504648923873901,
+      -0.5953255891799927,
+      -1.233541488647461,
+      -1.1252561807632446,
+      1.1104999780654907
+    ],
+    "magnitude": 18.9585
+  },
+  {
+    "id": "chunk_005",
+    "text": "g with Selenium, API Testing with Postman and Rest Assured, Performance Testing with JMeter, and Mobile Testing with Appium. Each course was designed with real-world projects so that learners could build portfolios while studying.\n\nChapter 4: AI and the Future of Testing\n\nBy 2023, the landscape of software testing was undergoing a seismic shift. Artificial Intelligence was changing how testers worked. Promod was quick to recognize this transformation.",
+    "start_char": 1600,
+    "end_char": 2055,
+    "char_count": 455,
+    "word_count": 68,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      -0.32891780138015747,
+      0.33383554220199585,
+      -2.8801777362823486,
+      -0.6815402507781982,
+      1.0399410724639893,
+      0.45961806178092957,
+      0.871914267539978,
+      -0.651762068271637,
+      0.05159734562039375,
+      -0.4573124647140503,
+      -0.7524702548980713,
+      0.11163540929555893,
+      1.3208752870559692,
+      0.9016438126564026,
+      0.482716828584671,
+      -0.6199411749839783,
+      0.8943247199058533,
+      -0.4066437780857086,
+      -1.3011143207550049,
+      0.34323370456695557
+    ],
+    "magnitude": 18.5066
+  },
+  {
+    "id": "chunk_006",
+    "text": "ked. Promod was quick to recognize this transformation. He began creating content around AI-powered testing tools, prompt engineering for QA, and the use of large language models like ChatGPT and Claude for generating test cases, writing test plans, and automating routine QA tasks. He introduced a new course series called \"AI Tester Blueprint\" \u2014 a comprehensive program designed to help QA professionals transition into the age of AI-driven testing.",
+    "start_char": 2000,
+    "end_char": 2451,
+    "char_count": 451,
+    "word_count": 69,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      -0.26369768381118774,
+      0.8458023071289062,
+      -3.14851975440979,
+      -1.0178343057632446,
+      0.9391511082649231,
+      -0.14883802831172943,
+      0.4494974911212921,
+      -0.4012123942375183,
+      0.41329944133758545,
+      -1.1917431354522705,
+      -0.08768829703330994,
+      0.11540576815605164,
+      1.7979962825775146,
+      0.5802190899848938,
+      0.15711040794849396,
+      -0.6777567863464355,
+      1.0875976085662842,
+      -1.143337607383728,
+      -1.3503144979476929,
+      0.33310356736183167
+    ],
+    "magnitude": 18.1695
+  },
+  {
+    "id": "chunk_007",
+    "text": "onals transition into the age of AI-driven testing. The blueprint covered topics such as RAG pipelines for QA documentation, vector databases for test case retrieval, LLM-based test generation, and intelligent defect triage using AI agents.\n\nChapter 5: The Philosophy\n\nPromod always believed in three core principles. First, \"Testing is a mindset, not just a job title.\" He emphasized that everyone in a software team should think like a tester.",
+    "start_char": 2400,
+    "end_char": 2845,
+    "char_count": 445,
+    "word_count": 69,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      0.653630256652832,
+      0.6287537813186646,
+      -3.148446559906006,
+      -0.6380937099456787,
+      1.107688307762146,
+      -0.40363946557044983,
+      0.3684643507003784,
+      -0.6363778114318848,
+      -0.14346535503864288,
+      -0.5797325372695923,
+      0.6066417694091797,
+      0.492501437664032,
+      0.9178191423416138,
+      1.2242261171340942,
+      -0.022202176973223686,
+      -0.5949040651321411,
+      0.3977266848087311,
+      -1.2006680965423584,
+      -0.11039282381534576,
+      0.44715064764022827
+    ],
+    "magnitude": 17.1835
+  },
+  {
+    "id": "chunk_008",
+    "text": "n a software team should think like a tester. Second, \"Learn by doing.\" Every course at The Testing Academy included hands-on labs, real projects, and practical exercises. Third, \"Stay curious, stay updated.\" The testing landscape evolves rapidly, and Promod encouraged his community to never stop learning.",
+    "start_char": 2800,
+    "end_char": 3107,
+    "char_count": 307,
+    "word_count": 46,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      0.12593871355056763,
+      0.8785290718078613,
+      -2.9205663204193115,
+      0.1361367553472519,
+      1.5925418138504028,
+      -0.48716574907302856,
+      0.7792656421661377,
+      -0.6065438985824585,
+      0.5068219900131226,
+      -0.9130883812904358,
+      0.18194480240345,
+      0.45785099267959595,
+      0.8305053114891052,
+      1.5805714130401611,
+      -0.10221888870000839,
+      -0.669476330280304,
+      0.8767427802085876,
+      -1.4493352174758911,
+      -0.3320116102695465,
+      0.22148850560188293
+    ],
+    "magnitude": 18.2445
+  },
+  {
+    "id": "chunk_009",
+    "text": "6: Impact and Legacy\n\nAs of 2026, The Testing Academy has trained over 500,000 QA professionals worldwide. The YouTube channel has surpassed 300,000 subscribers with over 2,000 tutorials. Promod has authored multiple e-books on testing, spoken at international conferences, and mentored thousands of testers personally. His LinkedIn posts about testing careers, AI in QA, and career advice regularly reach hundreds of thousands of professionals.",
+    "start_char": 3200,
+    "end_char": 3645,
+    "char_count": 445,
+    "word_count": 64,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      -0.7164302468299866,
+      1.422083854675293,
+      -3.8525822162628174,
+      0.47465750575065613,
+      1.4938055276870728,
+      -0.3685365319252014,
+      0.9087480306625366,
+      -0.42456263303756714,
+      0.8766785860061646,
+      -0.6714127659797668,
+      -1.1722544431686401,
+      0.43757253885269165,
+      0.9300158619880676,
+      0.3183598518371582,
+      0.25672465562820435,
+      -0.5424827337265015,
+      0.3530963063240051,
+      -1.3565013408660889,
+      -0.7057276964187622,
+      0.5738428235054016
+    ],
+    "magnitude": 19.4676
+  },
+  {
+    "id": "chunk_010",
+    "text": "reach hundreds of thousands of professionals. The Testing Academy has become more than a learning platform \u2014 it is a global movement that has redefined how people perceive and practice software testing. Promod's journey from a humble tester to a global QA educator is an inspiration to every aspiring quality assurance professional.",
+    "start_char": 3600,
+    "end_char": 3933,
+    "char_count": 332,
+    "word_count": 52,
+    "embedding_dim": 768,
+    "embedding_preview": [
+      0.4579825699329376,
+      1.3959639072418213,
+      -3.3144583702087402,
+      0.008254162035882473,
+      1.1212764978408813,
+      0.601233959197998,
+      0.8613049387931824,
+      -0.14754897356033325,
+      0.5618050694465637,
+      -0.5501806139945984,
+      0.08298378437757492,
+      0.3459782004356384,
+      1.0363414287567139,
+      0.8611037135124207,
+      0.20757824182510376,
+      -0.7183991074562073,
+      0.5873534679412842,
+      -1.3590114116668701,
+      -1.1648837327957153,
+      0.37676331400871277
+    ],
+    "magnitude": 18.8368
+  }
+];
+const simMatrix = [[1.0, 0.7651, 0.7257, 0.6665, 0.7043, 0.6883, 0.7539, 0.7676, 0.7193, 0.7496], [0.7651, 1.0, 0.8268, 0.6738, 0.7745, 0.7523, 0.7577, 0.8202, 0.7106, 0.781], [0.7257, 0.8268, 1.0, 0.723, 0.7525, 0.7826, 0.7474, 0.8106, 0.735, 0.7803], [0.6665, 0.6738, 0.723, 1.0, 0.6615, 0.6563, 0.6113, 0.6712, 0.7641, 0.6598], [0.7043, 0.7745, 0.7525, 0.6615, 1.0, 0.7925, 0.762, 0.8161, 0.6928, 0.7607], [0.6883, 0.7523, 0.7826, 0.6563, 0.7925, 1.0, 0.7916, 0.7829, 0.7131, 0.7549], [0.7539, 0.7577, 0.7474, 0.6113, 0.762, 0.7916, 1.0, 0.8083, 0.6856, 0.746], [0.7676, 0.8202, 0.8106, 0.6712, 0.8161, 0.7829, 0.8083, 1.0, 0.7283, 0.809], [0.7193, 0.7106, 0.735, 0.7641, 0.6928, 0.7131, 0.6856, 0.7283, 1.0, 0.7758], [0.7496, 0.781, 0.7803, 0.6598, 0.7607, 0.7549, 0.746, 0.809, 0.7758, 1.0]];
+
+// Stats
+document.getElementById('stats').innerHTML = `
+  <div class="stat-card"><div class="num">${chunks.length}</div><div class="label">Chunks Created</div></div>
+  <div class="stat-card"><div class="num">${chunks[0]?.embedding_dim || 0}</div><div class="label">Embedding Dims</div></div>
+  <div class="stat-card"><div class="num">500</div><div class="label">Chunk Size (chars)</div></div>
+  <div class="stat-card"><div class="num">100</div><div class="label">Overlap (chars)</div></div>
+`;
+
+// Chunks panel
+let chunksHtml = '<h3 class="section-title"><span class="icon">📄</span> Document Chunks</h3>';
+chunks.forEach(c => {
+  chunksHtml += `
+    <div class="chunk-card">
+      <div class="chunk-header">
+        <span class="chunk-id">${c.id.toUpperCase()}</span>
+        <div class="chunk-badges">
+          <span class="badge badge-chars">${c.char_count} chars</span>
+          <span class="badge badge-words">${c.word_count} words</span>
+          <span class="badge badge-dim">${c.embedding_dim}D vector</span>
+        </div>
+      </div>
+      <div class="chunk-text">${c.text}</div>
+    </div>`;
+});
+document.getElementById('panel-chunks').innerHTML = chunksHtml;
+
+// Embeddings panel
+let embHtml = '<h3 class="section-title"><span class="icon">🧬</span> Embedding Vectors (Preview — first 20 dimensions)</h3>';
+chunks.forEach(c => {
+  const vals = c.embedding_preview.map(v => `<span class="val">${v.toFixed(6)}</span>`).join(', ');
+  embHtml += `
+    <div class="chunk-card">
+      <div class="chunk-header">
+        <span class="chunk-id">${c.id.toUpperCase()}</span>
+        <div class="chunk-badges">
+          <span class="badge badge-dim">Magnitude: ${c.magnitude}</span>
+        </div>
+      </div>
+      <div class="embed-preview">[${vals}, ...]</div>
+    </div>`;
+});
+document.getElementById('panel-embeddings').innerHTML = embHtml;
+
+// Similarity matrix
+let simHtml = '<h3 class="section-title"><span class="icon">🔗</span> Cosine Similarity Between Chunks</h3><div class="matrix-container"><table class="sim-matrix"><tr><th></th>';
+chunks.forEach(c => { simHtml += `<th>${c.id.replace('chunk_','')}</th>`; });
+simHtml += '</tr>';
+simMatrix.forEach((row, i) => {
+  simHtml += `<tr><th>${chunks[i].id.replace('chunk_','')}</th>`;
+  row.forEach((val, j) => {
+    const intensity = Math.floor(val * 255);
+    const bg = i === j ? 'rgba(6,182,212,0.3)' : `rgba(217,70,239,${(val * 0.5).toFixed(2)})`;
+    simHtml += `<td style="background:${bg}; color:${val > 0.6 ? '#fff' : '#94a3b8'}">${val.toFixed(2)}</td>`;
+  });
+  simHtml += '</tr>';
+});
+simHtml += '</table></div>';
+document.getElementById('panel-similarity').innerHTML = simHtml;
+
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
