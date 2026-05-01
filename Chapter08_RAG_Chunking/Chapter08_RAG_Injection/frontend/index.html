@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VWO RAG System Visualization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .diagram-arrow {
+            display: inline-block;
+            width: 20px;
+            height: 2px;
+            background-color: #3b82f6;
+            position: relative;
+            margin: 0 10px;
+        }
+        .diagram-arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 5px solid #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 p-8">
+    <div class="max-w-6xl mx-auto space-y-8">
+        
+        <header class="text-center">
+            <h1 class="text-4xl font-bold text-blue-600">VWO Local RAG System</h1>
+            <p class="text-gray-500 mt-2">ChromaDB + Nomic Embeddings + Groq API (Llama 3)</p>
+        </header>
+
+        <!-- Step 1: Ingestion & Database View -->
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <h2 class="text-2xl font-bold mb-4">1. Document Ingestion & Database</h2>
+            <p class="text-sm text-gray-600 mb-4">Make sure you have placed a PDF in the <code>data/</code> folder.</p>
+            
+            <div class="flex space-x-4 mb-4">
+                <button id="ingest-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Ingest PDFs to ChromaDB
+                </button>
+                <button id="view-db-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                    View Database Chunks
+                </button>
+            </div>
+            
+            <div id="ingest-status" class="text-sm font-semibold mb-4 text-green-600 hidden"></div>
+
+            <!-- Database Content View -->
+            <div id="database-view" class="hidden mt-4 border-t pt-4">
+                <h3 class="text-lg font-semibold mb-2">Chunks in Local ChromaDB:</h3>
+                <div class="max-h-64 overflow-y-auto bg-gray-100 p-4 rounded border border-gray-300" id="db-chunks-container">
+                    <!-- Chunks will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Querying -->
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <h2 class="text-2xl font-bold mb-4">2. User Query (RAG Pipeline)</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Groq API Key</label>
+                    <input type="password" id="groq-key" class="w-full border p-2 rounded" placeholder="gsk_...">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Ask a Question</label>
+                    <input type="text" id="query-input" class="w-full border p-2 rounded" placeholder="E.g. What is the login requirement?">
+                </div>
+            </div>
+            
+            <button id="query-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full">
+                Ask System
+            </button>
+        </div>
+
+        <!-- Step 3: Visualization Pipeline -->
+        <div id="rag-visualization" class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hidden">
+            <h2 class="text-2xl font-bold mb-4">3. RAG Retrieval Diagram</h2>
+            
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 overflow-x-auto pb-4">
+                
+                <!-- Query Node -->
+                <div class="bg-blue-100 border border-blue-400 p-4 rounded-lg text-center w-48 shrink-0">
+                    <div class="font-bold text-blue-800">User Query</div>
+                    <div class="text-xs mt-2 italic" id="diagram-query-text"></div>
+                </div>
+                
+                <div class="diagram-arrow hidden md:block"></div>
+                <div class="text-center my-2 md:hidden">⬇️</div>
+
+                <!-- Database Retrieval Node -->
+                <div class="bg-purple-100 border border-purple-400 p-4 rounded-lg text-center w-64 shrink-0">
+                    <div class="font-bold text-purple-800">ChromaDB Retrieval</div>
+                    <div class="text-xs mt-2">Nomic Embeddings<br>Similarity Search</div>
+                </div>
+
+                <div class="diagram-arrow hidden md:block"></div>
+                <div class="text-center my-2 md:hidden">⬇️</div>
+
+                <!-- LLM Node -->
+                <div class="bg-orange-100 border border-orange-400 p-4 rounded-lg text-center w-48 shrink-0">
+                    <div class="font-bold text-orange-800">Groq LLM</div>
+                    <div class="text-xs mt-2">Llama 3 8B<br>Context Generation</div>
+                </div>
+
+            </div>
+
+            <!-- Retrieved Chunks Detail -->
+            <div class="mb-6 border border-purple-300 rounded-lg overflow-hidden">
+                <div class="bg-purple-50 p-2 border-b border-purple-300 font-bold text-purple-800">
+                    🔍 Retrieved Chunks Passed to LLM
+                </div>
+                <div id="retrieved-chunks-container" class="p-4 bg-white grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Fetched chunks go here -->
+                </div>
+            </div>
+
+            <!-- Final Answer -->
+            <div class="border border-green-300 rounded-lg overflow-hidden">
+                <div class="bg-green-50 p-2 border-b border-green-300 font-bold text-green-800">
+                    💡 Generated Answer
+                </div>
+                <div id="final-answer" class="p-4 bg-white text-gray-800 whitespace-pre-wrap">
+                    
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8001";
+
+        // Ingest PDF
+        document.getElementById('ingest-btn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('ingest-status');
+            statusDiv.textContent = "Ingesting and chunking PDFs... Please wait.";
+            statusDiv.classList.remove('hidden', 'text-red-600', 'text-green-600');
+            statusDiv.classList.add('text-blue-600');
+            
+            try {
+                const response = await fetch(`${API_BASE}/ingest`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.textContent = `✅ Success! Stored ${data.total_chunks_stored} chunks from: ${data.files_processed.join(', ')}`;
+                    statusDiv.classList.replace('text-blue-600', 'text-green-600');
+                } else {
+                    statusDiv.textContent = `❌ Error: ${data.detail}`;
+                    statusDiv.classList.replace('text-blue-600', 'text-red-600');
+                }
+            } catch (err) {
+                statusDiv.textContent = `❌ Connection Error: Ensure backend is running.`;
+                statusDiv.classList.replace('text-blue-600', 'text-red-600');
+            }
+        });
+
+        // View Database
+        document.getElementById('view-db-btn').addEventListener('click', async () => {
+            const dbView = document.getElementById('database-view');
+            const container = document.getElementById('db-chunks-container');
+            
+            try {
+                const response = await fetch(`${API_BASE}/database`);
+                const data = await response.json();
+                
+                if (data.ids.length === 0) {
+                    container.innerHTML = "<p class='text-gray-500 italic'>Database is empty. Please ingest a PDF first.</p>";
+                } else {
+                    container.innerHTML = "";
+                    for(let i=0; i<data.ids.length; i++) {
+                        container.innerHTML += `
+                            <div class="bg-white p-3 mb-2 rounded border border-gray-200 shadow-sm">
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-mono">${data.ids[i]}</span>
+                                <p class="text-sm mt-2 text-gray-700 line-clamp-3">${data.documents[i]}</p>
+                            </div>
+                        `;
+                    }
+                }
+                dbView.classList.remove('hidden');
+            } catch (err) {
+                alert("Failed to connect to backend.");
+            }
+        });
+
+        // Query
+        document.getElementById('query-btn').addEventListener('click', async () => {
+            const key = document.getElementById('groq-key').value.trim();
+            const q = document.getElementById('query-input').value.trim();
+            
+            if (!key || !q) {
+                alert("Please enter both Groq API Key and a Question.");
+                return;
+            }
+
+            const btn = document.getElementById('query-btn');
+            btn.textContent = "Processing RAG Pipeline...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ groq_api_key: key, question: q })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail);
+
+                // Update UI Visualization
+                document.getElementById('rag-visualization').classList.remove('hidden');
+                document.getElementById('diagram-query-text').textContent = `"${q}"`;
+                document.getElementById('final-answer').textContent = data.answer;
+
+                const chunksContainer = document.getElementById('retrieved-chunks-container');
+                chunksContainer.innerHTML = "";
+                
+                data.retrieved_chunks.forEach((chunk, idx) => {
+                    chunksContainer.innerHTML += `
+                        <div class="bg-purple-50 border border-purple-200 p-3 rounded-lg text-sm relative">
+                            <div class="absolute -top-3 -left-3 bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow">
+                                ${idx + 1}
+                            </div>
+                            <div class="font-mono text-xs text-purple-600 mb-1 border-b pb-1">${chunk.id}</div>
+                            <p class="text-gray-700 mt-2 h-24 overflow-y-auto">${chunk.content}</p>
+                        </div>
+                    `;
+                });
+
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            } finally {
+                btn.textContent = "Ask System";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

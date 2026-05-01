@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regression Test Case Suggester Using RAG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body class="text-gray-800">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <h1 class="text-4xl font-bold text-center text-blue-800 mb-8 tracking-tight">Jira RAG Test Case Generator</h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column -->
+            <div class="space-y-8">
+
+                <!-- Generator Section -->
+                <div class="glass p-6 rounded-2xl shadow-lg border border-gray-100">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">1. Generate Test Cases from Jira
+                    </h2>
+                    <form id="generateForm" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Jira ID (e.g. PROJ-123)</label>
+                                <input type="text" id="jiraId"
+                                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Jira Domain (e.g.
+                                    company)</label>
+                                <input type="text" id="jiraDomain"
+                                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Jira Email</label>
+                                <input type="email" id="jiraEmail"
+                                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Jira API Token</label>
+                                <input type="password" id="jiraToken"
+                                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Groq API Key</label>
+                            <input type="password" id="groqKey"
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+                                required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Output Format</label>
+                            <select id="outputFormat"
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                <option value="pdf">PDF</option>
+                                <option value="docx">Word (DOCX)</option>
+                                <option value="xlsx">Excel (XLSX)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" id="generateBtn"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            Generate & Save Document
+                        </button>
+                    </form>
+                    <div id="generateStatus" class="mt-4 text-sm hidden p-3 rounded-lg bg-gray-50 border"></div>
+                </div>
+
+                <!-- Ingestion Section -->
+                <div class="glass p-6 rounded-2xl shadow-lg border border-gray-100">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">2. Ingest Documents to ChromaDB
+                    </h2>
+                    <p class="text-sm text-gray-600 mb-4">Click below to read all generated documents from the data
+                        directory and load them into the local vector database.</p>
+                    <button id="ingestBtn"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        Ingest Generated Documents
+                    </button>
+                    <div id="ingestStatus" class="mt-4 text-sm hidden p-3 rounded-lg bg-gray-50 border"></div>
+                </div>
+
+                <!-- Query Section -->
+                <div class="glass p-6 rounded-2xl shadow-lg border border-gray-100">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">3. Ask Questions (RAG)</h2>
+                    <form id="queryForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Question about the test cases</label>
+                            <input type="text" id="question"
+                                placeholder="e.g. What are the edge cases for the login form?"
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+                                required>
+                        </div>
+                        <button type="submit" id="queryBtn"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                            Ask LLM
+                        </button>
+                    </form>
+
+                    <div id="queryResult" class="mt-6 hidden">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Answer:</h3>
+                        <div id="answerText"
+                            class="p-4 bg-white rounded-lg border border-gray-200 text-gray-800 whitespace-pre-wrap">
+                        </div>
+
+                        <h3 class="text-lg font-medium text-gray-900 mt-4 mb-2">Retrieved Context Sources:</h3>
+                        <div id="sourcesList" class="space-y-3 max-h-60 overflow-y-auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-8">
+                <!-- Database Viewer Section -->
+                <div class="glass p-6 rounded-2xl shadow-lg border border-gray-100 h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-2xl font-semibold text-gray-800">Vector Database Chunks</h2>
+                        <button id="refreshDbBtn"
+                            class="text-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors">Refresh
+                            View</button>
+                    </div>
+
+                    <div id="dbStats" class="mb-4 text-sm text-gray-600 font-medium">Loading database stats...</div>
+
+                    <div id="chunksContainer" class="flex-grow overflow-y-auto space-y-4 max-h-[800px] pr-2">
+                        <!-- Chunks will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:8002";
+
+        // Generate TC
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('generateBtn');
+            const status = document.getElementById('generateStatus');
+
+            btn.disabled = true;
+            btn.innerHTML = 'Generating... This may take a minute...';
+            status.classList.add('hidden');
+
+            const payload = {
+                jira_id: document.getElementById('jiraId').value,
+                jira_domain: document.getElementById('jiraDomain').value,
+                jira_email: document.getElementById('jiraEmail').value,
+                jira_token: document.getElementById('jiraToken').value,
+                groq_api_key: document.getElementById('groqKey').value,
+                output_format: document.getElementById('outputFormat').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/generate_tc`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                status.classList.remove('hidden');
+                if (response.ok) {
+                    status.className = 'mt-4 text-sm p-3 rounded-lg bg-green-50 border border-green-200 text-green-800';
+                    status.innerHTML = `<strong>Success!</strong> Generated ${data.total_generated} test cases.<br>Saved as: ${data.file_name}`;
+                } else {
+                    status.className = 'mt-4 text-sm p-3 rounded-lg bg-red-50 border border-red-200 text-red-800';
+                    status.innerHTML = `<strong>Error:</strong> ${data.detail || 'Failed to generate'}`;
+                }
+            } catch (error) {
+                status.classList.remove('hidden');
+                status.className = 'mt-4 text-sm p-3 rounded-lg bg-red-50 border border-red-200 text-red-800';
+                status.innerHTML = `<strong>Network Error:</strong> ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Generate & Save Document';
+            }
+        });
+
+        // Ingest
+        document.getElementById('ingestBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('ingestBtn');
+            const status = document.getElementById('ingestStatus');
+
+            btn.disabled = true;
+            btn.innerHTML = 'Ingesting...';
+            status.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}/ingest`, { method: 'POST' });
+                const data = await response.json();
+
+                status.classList.remove('hidden');
+                if (response.ok) {
+                    status.className = 'mt-4 text-sm p-3 rounded-lg bg-green-50 border border-green-200 text-green-800';
+                    status.innerHTML = `<strong>Success!</strong> Ingested ${data.total_chunks_stored || 0} chunks from ${data.files_processed ? data.files_processed.length : 0} files.`;
+                    loadDatabase(); // Refresh db view
+                } else {
+                    status.className = 'mt-4 text-sm p-3 rounded-lg bg-red-50 border border-red-200 text-red-800';
+                    status.innerHTML = `<strong>Error:</strong> ${data.detail || 'Failed to ingest'}`;
+                }
+            } catch (error) {
+                status.classList.remove('hidden');
+                status.className = 'mt-4 text-sm p-3 rounded-lg bg-red-50 border border-red-200 text-red-800';
+                status.innerHTML = `<strong>Network Error:</strong> ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Ingest Generated Documents';
+            }
+        });
+
+        // Query
+        document.getElementById('queryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('queryBtn');
+            const resultDiv = document.getElementById('queryResult');
+            const answerText = document.getElementById('answerText');
+            const sourcesList = document.getElementById('sourcesList');
+
+            const groqKey = document.getElementById('groqKey').value;
+            if (!groqKey) {
+                alert("Please enter your Groq API Key above first.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = 'Thinking...';
+            resultDiv.classList.add('hidden');
+            sourcesList.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_URL}/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: document.getElementById('question').value,
+                        groq_api_key: groqKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.classList.remove('hidden');
+                    answerText.textContent = data.answer;
+
+                    if (data.retrieved_chunks && data.retrieved_chunks.length > 0) {
+                        data.retrieved_chunks.forEach((chunk, index) => {
+                            const chunkEl = document.createElement('div');
+                            chunkEl.className = 'bg-gray-50 p-3 rounded-md border border-gray-200 text-sm';
+                            chunkEl.innerHTML = `
+                                <div class="font-semibold text-indigo-700 mb-1">Source: ${chunk.metadata.source} (Chunk ID: ${chunk.id})</div>
+                                <div class="text-gray-600 line-clamp-3 hover:line-clamp-none cursor-pointer" onclick="this.classList.toggle('line-clamp-3')">${chunk.content}</div>
+                            `;
+                            sourcesList.appendChild(chunkEl);
+                        });
+                    } else {
+                        sourcesList.innerHTML = '<div class="text-sm text-gray-500">No sources retrieved.</div>';
+                    }
+                } else {
+                    alert(`Error: ${data.detail}`);
+                }
+            } catch (error) {
+                alert(`Network Error: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Ask LLM';
+            }
+        });
+
+        // Load Database
+        async function loadDatabase() {
+            const container = document.getElementById('chunksContainer');
+            const stats = document.getElementById('dbStats');
+
+            container.innerHTML = '<div class="text-center text-gray-500 my-8">Loading database content...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/database`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    const totalChunks = data.ids.length;
+
+                    // Group by source file
+                    const fileGroups = {};
+                    for (let i = 0; i < data.metadatas.length; i++) {
+                        const source = data.metadatas[i].source || 'Unknown';
+                        if (!fileGroups[source]) fileGroups[source] = 0;
+                        fileGroups[source]++;
+                    }
+
+                    const filesCount = Object.keys(fileGroups).length;
+                    stats.innerHTML = `Total Chunks: <strong>${totalChunks}</strong> | Files Indexed: <strong>${filesCount}</strong>`;
+
+                    container.innerHTML = '';
+
+                    if (totalChunks === 0) {
+                        container.innerHTML = '<div class="text-center text-gray-500 my-8 bg-white p-6 rounded-lg border">Database is empty. Generate and ingest some test cases first.</div>';
+                        return;
+                    }
+
+                    // Render chunks
+                    for (let i = 0; i < totalChunks; i++) {
+                        const id = data.ids[i];
+                        const content = data.documents[i];
+                        const meta = data.metadatas[i];
+
+                        const chunkCard = document.createElement('div');
+                        chunkCard.className = 'bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow';
+
+                        chunkCard.innerHTML = `
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-md">${meta.source}</span>
+                                <span class="text-xs text-gray-400 font-mono">${id}</span>
+                            </div>
+                            <p class="text-sm text-gray-700 whitespace-pre-wrap line-clamp-4 hover:line-clamp-none cursor-pointer" onclick="this.classList.toggle('line-clamp-4')">${content}</p>
+                        `;
+                        container.appendChild(chunkCard);
+                    }
+                } else {
+                    container.innerHTML = `<div class="text-red-500">Error loading DB: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="text-red-500">Failed to connect to backend: ${error.message}</div>`;
+                stats.innerHTML = "Offline";
+            }
+        }
+
+        document.getElementById('refreshDbBtn').addEventListener('click', loadDatabase);
+
+        // Initial load
+        window.addEventListener('DOMContentLoaded', loadDatabase);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+chromadb
+langchain
+langchain-community
+langchain-huggingface
+pypdf
+python-multipart
+groq
+sentence-transformers
+einops
