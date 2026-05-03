@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced RAG Explorer | VWO Test Cases</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --bg-card: #16161f;
+            --accent-primary: #6366f1;
+            --accent-secondary: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #2a2a3a;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .logo-text span {
+            color: var(--accent-primary);
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .nav-item.active .nav-icon {
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+        }
+
+        .nav-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Status Panel */
+        .status-panel {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: auto;
+        }
+
+        .status-title {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .status-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .status-value.error {
+            color: var(--error);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Left Panel */
+        .left-panel {
+            width: 50%;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .panel-tab {
+            padding: 16px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .panel-tab.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+
+        .panel-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: var(--bg-secondary);
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Right Panel */
+        .right-panel {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 85%;
+            padding: 16px 20px;
+            border-radius: 16px;
+        }
+
+        .message-user .message-content {
+            background: var(--accent-primary);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-assistant .message-content {
+            background: var(--bg-tertiary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message-user .message-label {
+            justify-content: flex-end;
+            color: var(--accent-secondary);
+        }
+
+        .message-assistant .message-label {
+            color: var(--text-secondary);
+        }
+
+        /* Query Input */
+        .query-input-container {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .query-input-wrapper {
+            display: flex;
+            gap: 12px;
+        }
+
+        .query-input {
+            flex: 1;
+        }
+
+        /* Results Panel */
+        .results-panel {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .result-section {
+            margin-bottom: 24px;
+        }
+
+        .result-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-badge {
+            background: var(--accent-primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        .chunk-card {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .chunk-card.reranked {
+            border-left-color: var(--success);
+        }
+
+        .chunk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .chunk-id {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .chunk-score {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            background: var(--bg-card);
+            border-radius: 6px;
+        }
+
+        .chunk-content {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Preview Table */
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .preview-table th {
+            text-align: left;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .preview-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .preview-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        /* Chunk Visualization */
+        .chunk-viz {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .chunk-viz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .chunk-viz-id {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .chunk-viz-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .chunk-viz-content {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-height: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chunk-viz-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(transparent, var(--bg-tertiary));
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Hidden file input */
+        #fileInput {
+            display: none;
+        }
+
+        /* Flow visualization */
+        .flow-container {
+            margin-top: 24px;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .flow-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .flow-info {
+            flex: 1;
+        }
+
+        .flow-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .flow-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .flow-arrow {
+            color: var(--accent-primary);
+            font-size: 20px;
+        }
+
+        /* Hidden panels */
+        .hidden {
+            display: none;
+        }
+
+        /* API Key Input */
+        .api-key-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">RAG</div>
+                <div class="logo-text">Advanced <span>RAG</span></div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Navigation</div>
+                <div class="nav-item active" data-panel="ingest">
+                    <span class="nav-icon">📥</span>
+                    <span class="nav-text">Ingestion</span>
+                </div>
+                <div class="nav-item" data-panel="preview">
+                    <span class="nav-icon">👁️</span>
+                    <span class="nav-text">Data Preview</span>
+                </div>
+                <div class="nav-item" data-panel="query">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-text">Query & Chat</span>
+                </div>
+                <div class="nav-item" data-panel="database">
+                    <span class="nav-icon">🗄️</span>
+                    <span class="nav-text">Database View</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Settings</div>
+                <div class="nav-item" onclick="showSettings()">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">API Configuration</span>
+                </div>
+            </div>
+
+            <div class="status-panel">
+                <div class="status-title">System Status</div>
+                <div class="status-item">
+                    <span class="status-label">Embedding</span>
+                    <span class="status-value" id="statusEmbed">Loading...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Vector DB</span>
+                    <span class="status-value" id="statusVectorDB">Loading...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Reranker</span>
+                    <span class="status-value" id="statusReranker">Loading...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Total Chunks</span>
+                    <span class="status-value" id="totalChunks">0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div>
+                    <h1 class="header-title">Advanced RAG Explorer</h1>
+                    <p class="header-subtitle">VWO Test Cases Management with BGE-M3 + Qdrant + Reranker</p>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh</button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Left Panel: Ingestion -->
+                <div class="left-panel">
+                    <div class="panel-tabs">
+                        <div class="panel-tab active" data-tab="upload">📤 Upload & Ingest</div>
+                        <div class="panel-tab" data-tab="config">⚙️ Configuration</div>
+                    </div>
+
+                    <div class="panel-content" id="leftContent">
+                        <!-- Upload Tab -->
+                        <div id="uploadTab">
+                            <div class="api-key-container">
+                                <label class="form-label">Groq API Key (Required for LLM)</label>
+                                <input type="password" class="form-input" id="groqApiKey" placeholder="gsk_...">
+                            </div>
+
+                            <div class="upload-zone" id="uploadZone">
+                                <div class="upload-icon">📄</div>
+                                <div class="upload-title">Upload Test Cases (CSV/Excel)</div>
+                                <div class="upload-subtitle">Drag & drop or click to browse</div>
+                                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.pdf,.docx">
+                            </div>
+
+                            <div class="form-group" style="margin-top: 20px;">
+                                <label class="form-label">Chunk Size (characters)</label>
+                                <input type="number" class="form-input" id="chunkSize" value="500" min="100" max="2000">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Chunk Overlap (characters)</label>
+                                <input type="number" class="form-input" id="chunkOverlap" value="100" min="0" max="500">
+                            </div>
+
+                            <div style="display: flex; gap: 12px;">
+                                <button class="btn btn-secondary" onclick="previewData()">👁️ Preview Data</button>
+                                <button class="btn btn-primary" onclick="ingestData()">🚀 Ingest Data</button>
+                            </div>
+
+                            <!-- Ingestion Flow -->
+                            <div class="flow-container" id="ingestionFlow" style="display: none;">
+                                <h3 style="margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">Ingestion Pipeline</h3>
+                                <div class="flow-step">
+                                    <div class="flow-icon">1</div>
+                                    <div class="flow-info">
+                                        <div class="flow-title">File Upload</div>
+                                        <div class="flow-desc">Parse CSV/Excel/PDF/DOCX</div>
+                                    </div>
+                                </div>
+                                <div class="flow-step">
+                                    <div class="flow-icon">2</div>
+                                    <div class="flow-info">
+                                        <div class="flow-title">Text Chunking</div>
+                                        <div class="flow-desc">Split documents with overlap</div>
+                                    </div>
+                                </div>
+                                <div class="flow-step">
+                                    <div class="flow-icon">3</div>
+                                    <div class="flow-info">
+                                        <div class="flow-title">BGE-M3 Embeddings</div>
+                                        <div class="flow-desc">Generate 1024-dim vectors</div>
+                                    </div>
+                                </div>
+                                <div class="flow-step">
+                                    <div class="flow-icon">4</div>
+                                    <div class="flow-info">
+                                        <div class="flow-title">Qdrant Storage</div>
+                                        <div class="flow-desc">Store in vector database</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Config Tab -->
+                        <div id="configTab" class="hidden">
+                            <h3 style="margin-bottom: 20px;">Configuration Settings</h3>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Embedding Model</label>
+                                <select class="form-input" id="embeddingModel">
+                                    <option value="BAAI/bge-m3">BGE-M3 (Recommended)</option>
+                                    <option value="nomic-ai/nomic-embed-text-v1.5">Nomic Embed Text v1.5</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Reranker Model</label>
+                                <select class="form-input" id="rerankerModel">
+                                    <option value="BAAI/bge-reranker-v2-m3">BGE Reranker v2 (Recommended)</option>
+                                    <option value="BAAI/bge-reranker-base">BGE Reranker Base</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Vector Database</label>
+                                <select class="form-input" id="vectorDB">
+                                    <option value="qdrant">Qdrant (Local)</option>
+                                    <option value="chroma">Chroma DB</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Initial Retrieval (Top-K)</label>
+                                <input type="number" class="form-input" id="topKInitial" value="10" min="1" max="50">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Final Results (After Rerank)</label>
+                                <input type="number" class="form-input" id="topKFinal" value="5" min="1" max="20">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Query & Results -->
+                <div class="right-panel">
+                    <div class="panel-tabs">
+                        <div class="panel-tab active" data-chat-tab="query">💬 Query & Chat</div>
+                        <div class="panel-tab" data-chat-tab="results">📊 Retrieval Results</div>
+                    </div>
+
+                    <div class="chat-container" id="rightContent">
+                        <!-- Query Tab -->
+                        <div id="queryTab">
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="message message-assistant">
+                                    <div class="message-content">
+                                        <div class="message-label">🤖 RAG Assistant</div>
+                                        <p>Hello! I'm your Advanced RAG Explorer for VWO Test Cases. Upload your test case files and I can help you:</p>
+                                        <ul style="margin-top: 12px; margin-left: 20px;">
+                                            <li>🔍 Search and retrieve relevant test cases</li>
+                                            <li>📝 Generate new test cases from Jira</li>
+                                            <li>💡 Answer questions about your test suite</li>
+                                        </ul>
+                                        <p style="margin-top: 12px;">Start by uploading your test cases or ask me a question!</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="query-input-container">
+                                <div class="query-input-wrapper">
+                                    <input type="text" class="form-input query-input" id="queryInput" placeholder="Ask about your test cases...">
+                                    <button class="btn btn-primary" onclick="sendQuery()">Send</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results Tab -->
+                        <div id="resultsTab" class="hidden">
+                            <div class="results-panel" id="resultsPanel">
+                                <div class="stats-grid">
+                                    <div class="stat-card">
+                                        <div class="stat-value" id="resInitialChunks">0</div>
+                                        <div class="stat-label">Initial Retrieved</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-value" id="resRerankedChunks">0</div>
+                                        <div class="stat-label">After Rerank</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-value" id="resChunksStored">0</div>
+                                        <div class="stat-label">Total Stored</div>
+                                    </div>
+                                </div>
+
+                                <div class="result-section">
+                                    <div class="result-title">
+                                        📥 Initial Chunks Retrieved
+                                        <span class="result-badge" id="initialBadge">0</span>
+                                    </div>
+                                    <div id="initialChunksList"></div>
+                                </div>
+
+                                <div class="result-section">
+                                    <div class="result-title">
+                                        ✅ Reranked Results
+                                        <span class="result-badge" id="rerankedBadge" style="background: var(--success);">0</span>
+                                    </div>
+                                    <div id="rerankedChunksList"></div>
+                                </div>
+
+                                <div class="result-section">
+                                    <div class="result-title">🤖 LLM Response</div>
+                                    <div class="chunk-card" id="llmResponseCard">
+                                        <div class="chunk-content" id="llmResponseText">No response yet. Ask a question to see results.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let selectedFile = null;
+        let lastQueryResults = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkStatus();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // File upload
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+            
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+            
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    selectedFile = files[0];
+                    updateUploadZone(selectedFile.name);
+                }
+            });
+
+            // Tab navigation
+            document.querySelectorAll('.panel-tab[data-tab]').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.panel-tab[data-tab]').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    if (tab.dataset.tab === 'upload') {
+                        document.getElementById('uploadTab').classList.remove('hidden');
+                        document.getElementById('configTab').classList.add('hidden');
+                    } else {
+                        document.getElementById('uploadTab').classList.add('hidden');
+                        document.getElementById('configTab').classList.remove('hidden');
+                    }
+                });
+            });
+
+            // Chat tabs
+            document.querySelectorAll('.panel-tab[data-chat-tab]').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.panel-tab[data-chat-tab]').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    if (tab.dataset.chatTab === 'query') {
+                        document.getElementById('queryTab').classList.remove('hidden');
+                        document.getElementById('resultsTab').classList.add('hidden');
+                    } else {
+                        document.getElementById('queryTab').classList.add('hidden');
+                        document.getElementById('resultsTab').classList.remove('hidden');
+                    }
+                });
+            });
+
+            // Query input
+            document.getElementById('queryInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendQuery();
+            });
+
+            // Navigation
+            document.querySelectorAll('.nav-item[data-panel]').forEach(item => {
+                item.addEventListener('click', () => {
+                    const panel = item.dataset.panel;
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    if (panel === 'ingest') {
+                        document.querySelector('.panel-tab[data-tab="upload"]').click();
+                    } else if (panel === 'query') {
+                        document.querySelector('.panel-tab[data-chat-tab="query"]').click();
+                    } else if (panel === 'preview') {
+                        showPreview();
+                    } else if (panel === 'database') {
+                        showDatabase();
+                    }
+                });
+            });
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                updateUploadZone(file.name);
+            }
+        }
+
+        function updateUploadZone(fileName) {
+            const uploadZone = document.getElementById('uploadZone');
+            uploadZone.innerHTML = `
+                <div class="upload-icon">✅</div>
+                <div class="upload-title">${fileName}</div>
+                <div class="upload-subtitle">Click to change file</div>
+            `;
+        }
+
+        async function checkStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/status`);
+                const data = await res.json();
+                
+                document.getElementById('statusEmbed').textContent = data.embedding_model ? '✓ Ready' : '✗ Error';
+                document.getElementById('statusEmbed').className = data.embedding_model ? 'status-value' : 'status-value error';
+                
+                document.getElementById('statusVectorDB').textContent = data.vector_db ? '✓ Ready' : '✗ Error';
+                document.getElementById('statusVectorDB').className = data.vector_db ? 'status-value' : 'status-value error';
+                
+                document.getElementById('statusReranker').textContent = data.reranker_model ? '✓ Ready' : '⚠ N/A';
+                
+                // Get stats
+                const statsRes = await fetch(`${API_BASE}/stats`);
+                const stats = await statsRes.json();
+                document.getElementById('totalChunks').textContent = stats.total_points || 0;
+                document.getElementById('resChunksStored').textContent = stats.total_points || 0;
+            } catch (e) {
+                console.error('Status check failed:', e);
+                document.getElementById('statusEmbed').textContent = '✗ Offline';
+                document.getElementById('statusEmbed').className = 'status-value error';
+                document.getElementById('statusVectorDB').textContent = '✗ Offline';
+                document.getElementById('statusVectorDB').className = 'status-value error';
+            }
+        }
+
+        async function previewData() {
+            if (!selectedFile) {
+                alert('Please select a file first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const res = await fetch(`${API_BASE}/upload_preview`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data && data.chunk_preview && data.chunk_preview.length > 0) {
+                    // Show preview
+                    let html = `<h3 style="margin-bottom: 16px;">Data Preview: ${data.file_name}</h3>`;
+                    html += `<div class="stats-grid" style="margin-bottom: 20px;">`;
+                    html += `<div class="stat-card"><div class="stat-value">${data.total_records}</div><div class="stat-label">Records</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">${data.chunking_config.total_chunks}</div><div class="stat-label">Total Chunks</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">${data.chunking_config.chunk_size}</div><div class="stat-label">Chunk Size</div></div>`;
+                    html += `</div>`;
+
+                    html += `<h4 style="margin-bottom: 12px; color: var(--text-secondary);">Chunk Preview (First 10)</h4>`;
+                    
+                    data.chunk_preview.forEach((chunk, i) => {
+                        html += `
+                            <div class="chunk-viz">
+                                <div class="chunk-viz-header">
+                                    <span class="chunk-viz-id">Chunk ${i + 1}</span>
+                                    <span class="chunk-viz-meta">${chunk.content_length} chars</span>
+                                </div>
+                                <div class="chunk-viz-content">${chunk.content}</div>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById('chatMessages').innerHTML = html;
+                    
+                    // Switch to results tab
+                    document.querySelector('.panel-tab[data-chat-tab="results"]').click();
+                }
+            } catch (e) {
+                alert('Error previewing data: ' + e.message);
+            }
+        }
+
+        async function ingestData() {
+            if (!selectedFile) {
+                alert('Please select a file first');
+                return;
+            }
+
+            const apiKey = document.getElementById('groqApiKey').value;
+            if (!apiKey) {
+                alert('Please enter your Groq API Key');
+                return;
+            }
+
+            const chunkSize = document.getElementById('chunkSize').value;
+            const chunkOverlap = document.getElementById('chunkOverlap').value;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('chunk_size', chunkSize);
+            formData.append('chunk_overlap', chunkOverlap);
+
+            // Show loading
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = `
+                <div class="message message-assistant">
+                    <div class="message-content">
+                        <div class="message-label">🔄 Ingesting...</div>
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('ingestionFlow').style.display = 'block';
+
+            try {
+                const res = await fetch(`${API_BASE}/ingest`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                chatMessages.innerHTML = `
+                    <div class="message message-assistant">
+                        <div class="message-content">
+                            <div class="message-label">✅ Ingestion Complete!</div>
+                            <ul style="margin-top: 12px; margin-left: 20px;">
+                                <li><strong>File:</strong> ${data.file_name}</li>
+                                <li><strong>Total Chunks:</strong> ${data.total_chunks}</li>
+                                <li><strong>Chunks Stored:</strong> ${data.chunks_stored}</li>
+                                <li><strong>Chunk Size:</strong> ${data.chunk_size} chars</li>
+                                <li><strong>Overlap:</strong> ${data.chunk_overlap} chars</li>
+                                <li><strong>Embedding:</strong> ${data.embedding_model}</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+
+                refreshStats();
+            } catch (e) {
+                chatMessages.innerHTML = `
+                    <div class="message message-assistant">
+                        <div class="message-content" style="background: var(--error);">
+                            <div class="message-label">❌ Error</div>
+                            <p>${e.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function sendQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            const apiKey = document.getElementById('groqApiKey').value;
+
+            if (!query) return;
+            if (!apiKey) {
+                alert('Please enter your Groq API Key');
+                return;
+            }
+
+            // Add user message
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML += `
+                <div class="message message-user">
+                    <div class="message-content">
+                        <div class="message-label">You</div>
+                        <p>${query}</p>
+                    </div>
+                </div>
+                <div class="message message-assistant">
+                    <div class="message-content">
+                        <div class="message-label">🔍 Searching...</div>
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            `;
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            document.getElementById('queryInput').value = '';
+
+            try {
+                const res = await fetch(`${API_BASE}/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: query,
+                        groq_api_key: apiKey
+                    })
+                });
+                const data = await res.json();
+
+                lastQueryResults = data;
+
+                // Update results panel
+                document.getElementById('resInitialChunks').textContent = data.retrieval_info.initial_chunks_retrieved;
+                document.getElementById('resRerankedChunks').textContent = data.retrieval_info.chunks_after_rerank;
+                document.getElementById('initialBadge').textContent = data.retrieval_info.initial_chunks_retrieved;
+                document.getElementById('rerankedBadge').textContent = data.retrieval_info.chunks_after_rerank;
+
+                // Show initial chunks
+                let initialHtml = '';
+                data.initial_chunks.forEach((chunk, i) => {
+                    initialHtml += `
+                        <div class="chunk-card">
+                            <div class="chunk-header">
+                                <span class="chunk-id">${chunk.id}</span>
+                                <span class="chunk-score">Score: ${chunk.score.toFixed(4)}</span>
+                            </div>
+                            <div class="chunk-content">${chunk.content.substring(0, 200)}...</div>
+                        </div>
+                    `;
+                });
+                document.getElementById('initialChunksList').innerHTML = initialHtml;
+
+                // Show reranked chunks
+                let rerankedHtml = '';
+                data.reranked_chunks.forEach((chunk, i) => {
+                    rerankedHtml += `
+                        <div class="chunk-card reranked">
+                            <div class="chunk-header">
+                                <span class="chunk-id">${i + 1}. ${chunk.id.substring(0, 40)}...</span>
+                                <span class="chunk-score" style="background: var(--success);">Reranked</span>
+                            </div>
+                            <div class="chunk-content">${chunk.content.substring(0, 200)}...</div>
+                        </div>
+                    `;
+                });
+                document.getElementById('rerankedChunksList').innerHTML = rerankedHtml;
+
+                // Show LLM response
+                document.getElementById('llmResponseText').textContent = data.llm_response;
+
+                // Update chat
+                chatMessages.lastElementChild.remove();
+                chatMessages.innerHTML += `
+                    <div class="message message-assistant">
+                        <div class="message-content">
+                            <div class="message-label">🤖 Answer</div>
+                            <p>${data.llm_response}</p>
+                        </div>
+                    </div>
+                `;
+
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Switch to results tab
+                document.querySelector('.panel-tab[data-chat-tab="results"]').click();
+
+            } catch (e) {
+                chatMessages.lastElementChild.remove();
+                chatMessages.innerHTML += `
+                    <div class="message message-assistant">
+                        <div class="message-content" style="background: var(--error);">
+                            <div class="message-label">❌ Error</div>
+                            <p>${e.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function refreshStats() {
+            await checkStatus();
+        }
+
+        function showSettings() {
+            document.querySelector('.panel-tab[data-tab="config"]').click();
+        }
+
+        function showPreview() {
+            if (selectedFile) {
+                previewData();
+            }
+        }
+
+        async function showDatabase() {
+            try {
+                const res = await fetch(`${API_BASE}/database?limit=20`);
+                const data = await res.json();
+
+                let html = `<h3 style="margin-bottom: 16px;">Stored Chunks: ${data.total_chunks}</h3>`;
+                
+                data.chunks.forEach(chunk => {
+                    html += `
+                        <div class="chunk-viz">
+                            <div class="chunk-viz-header">
+                                <span class="chunk-viz-id">${chunk.id}</span>
+                                <span class="chunk-viz-meta">${chunk.source_file}</span>
+                            </div>
+                            <div class="chunk-viz-content">${chunk.content}</div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('chatMessages').innerHTML = html;
+                document.querySelector('.panel-tab[data-chat-tab="query"]').click();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

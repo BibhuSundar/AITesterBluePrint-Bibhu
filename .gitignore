@@ -21,3 +21,7 @@ dist/
 
 # Gemini system
 .gemini/
+
+# Databases
+qdrantStorage/
+chroma_db/
